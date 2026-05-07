@@ -4,6 +4,7 @@ import EmptyState from '../../components/EmptyState.jsx';
 import ErrorAlert from '../../components/ErrorAlert.jsx';
 import PageHeader from '../../components/PageHeader.jsx';
 import StatusBadge from '../../components/StatusBadge.jsx';
+import { getApiErrorMessage } from '../../services/api.js';
 import { doubtService } from '../../services/doubtService.js';
 import { mentorService } from '../../services/mentorService.js';
 
@@ -22,7 +23,7 @@ export default function AssignedDoubtsPage() {
     setError('');
     doubtService.assigned()
       .then(setDoubts)
-      .catch((exception) => setError(exception.response?.data?.message || 'Could not load assigned doubts.'));
+      .catch((exception) => setError(getApiErrorMessage(exception, 'Could not load assigned doubts.')));
   }
 
   async function updateStatus(doubtId, status) {
@@ -35,7 +36,7 @@ export default function AssignedDoubtsPage() {
       setMessage('Status updated.');
       loadDoubts();
     } catch (exception) {
-      setError(exception.response?.data?.message || 'Could not update status.');
+      setError(getApiErrorMessage(exception, 'Could not update status.'));
     } finally {
       setLoadingId(null);
     }
@@ -52,7 +53,7 @@ export default function AssignedDoubtsPage() {
       setMessage('Response submitted and doubt marked resolved.');
       loadDoubts();
     } catch (exception) {
-      setError(exception.response?.data?.message || 'Could not submit response.');
+      setError(getApiErrorMessage(exception, 'Could not submit response.'));
     } finally {
       setLoadingId(null);
     }

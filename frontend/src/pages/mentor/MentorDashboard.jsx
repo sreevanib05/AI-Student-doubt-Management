@@ -6,6 +6,7 @@ import EmptyState from '../../components/EmptyState.jsx';
 import ErrorAlert from '../../components/ErrorAlert.jsx';
 import PageHeader from '../../components/PageHeader.jsx';
 import StatCard from '../../components/StatCard.jsx';
+import { getApiErrorMessage } from '../../services/api.js';
 import { doubtService } from '../../services/doubtService.js';
 
 export default function MentorDashboard() {
@@ -15,7 +16,7 @@ export default function MentorDashboard() {
   useEffect(() => {
     doubtService.assigned()
       .then(setDoubts)
-      .catch((exception) => setError(exception.response?.data?.message || 'Could not load assigned doubts.'));
+      .catch((exception) => setError(getApiErrorMessage(exception, 'Could not load assigned doubts.')));
   }, []);
 
   const active = doubts.filter((doubt) => doubt.status !== 'RESOLVED').length;

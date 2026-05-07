@@ -1,5 +1,6 @@
 import { Save, UserMinus } from 'lucide-react';
 import { useState } from 'react';
+import { getApiErrorMessage } from '../services/api.js';
 import { adminService } from '../services/adminService.js';
 import ErrorAlert from './ErrorAlert.jsx';
 import StatusBadge from './StatusBadge.jsx';
@@ -24,7 +25,7 @@ export default function AdminDoubtAssignmentTable({ doubts, mentors, onChanged }
       await adminService.assignMentor(doubt.id, Number(mentorId));
       onChanged();
     } catch (exception) {
-      setError(exception.response?.data?.message || 'Could not assign mentor.');
+      setError(getApiErrorMessage(exception, 'Could not assign mentor.'));
     } finally {
       setLoadingId(null);
     }
@@ -38,7 +39,7 @@ export default function AdminDoubtAssignmentTable({ doubts, mentors, onChanged }
       await adminService.unassignMentor(doubt.id);
       onChanged();
     } catch (exception) {
-      setError(exception.response?.data?.message || 'Could not unassign mentor.');
+      setError(getApiErrorMessage(exception, 'Could not unassign mentor.'));
     } finally {
       setLoadingId(null);
     }

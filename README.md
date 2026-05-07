@@ -248,7 +248,13 @@ In Vercel:
 5. Set Build Command to `npm run build`.
 6. Set Output Directory to `dist`.
 
-Add this Vercel environment variable:
+The frontend now has a production fallback that calls `/api`, and `frontend/vercel.json` proxies those requests to:
+
+```text
+https://doubtflow-ai-backend.onrender.com/api
+```
+
+If your Render backend URL is different, update the `/api/(.*)` rewrite destination in `frontend/vercel.json`, or add this Vercel environment variable to call the backend directly:
 
 ```text
 VITE_API_BASE_URL=https://your-render-backend.onrender.com/api
@@ -262,7 +268,7 @@ Use this order:
 
 1. Deploy backend on Render.
 2. Copy the Render backend URL.
-3. Deploy frontend on Vercel with `VITE_API_BASE_URL`.
+3. Deploy frontend on Vercel, using `VITE_API_BASE_URL` only if your backend URL differs from the included Vercel rewrite.
 4. Test login/register from the Vercel URL.
 
 ### Important Security Note

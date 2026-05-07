@@ -2,6 +2,7 @@ import { LogIn } from 'lucide-react';
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import ErrorAlert from '../../components/ErrorAlert.jsx';
+import { getApiErrorMessage } from '../../services/api.js';
 import { useAuth } from '../../services/AuthContext.jsx';
 
 export default function LoginPage() {
@@ -21,7 +22,7 @@ export default function LoginPage() {
       const route = session.role === 'STUDENT' ? '/student' : session.role === 'MENTOR' ? '/mentor' : '/admin';
       navigate(route);
     } catch (exception) {
-      setError(exception.response?.data?.message || 'Login failed.');
+      setError(getApiErrorMessage(exception, 'Login failed.'));
     } finally {
       setLoading(false);
     }

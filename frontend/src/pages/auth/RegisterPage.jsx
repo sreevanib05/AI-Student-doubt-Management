@@ -2,6 +2,7 @@ import { UserPlus } from 'lucide-react';
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import ErrorAlert from '../../components/ErrorAlert.jsx';
+import { getApiErrorMessage } from '../../services/api.js';
 import { useAuth } from '../../services/AuthContext.jsx';
 
 export default function RegisterPage() {
@@ -25,7 +26,7 @@ export default function RegisterPage() {
         navigate('/student');
       }
     } catch (exception) {
-      setError(exception.response?.data?.message || 'Registration failed.');
+      setError(getApiErrorMessage(exception, 'Registration failed.'));
     } finally {
       setLoading(false);
     }

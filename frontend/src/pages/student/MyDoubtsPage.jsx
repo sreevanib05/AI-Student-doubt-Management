@@ -3,6 +3,7 @@ import DoubtTable from '../../components/DoubtTable.jsx';
 import EmptyState from '../../components/EmptyState.jsx';
 import ErrorAlert from '../../components/ErrorAlert.jsx';
 import PageHeader from '../../components/PageHeader.jsx';
+import { getApiErrorMessage } from '../../services/api.js';
 import { doubtService } from '../../services/doubtService.js';
 
 export default function MyDoubtsPage() {
@@ -12,7 +13,7 @@ export default function MyDoubtsPage() {
   useEffect(() => {
     doubtService.myDoubts()
       .then(setDoubts)
-      .catch((exception) => setError(exception.response?.data?.message || 'Could not load doubts.'));
+      .catch((exception) => setError(getApiErrorMessage(exception, 'Could not load doubts.')));
   }, []);
 
   return (

@@ -4,6 +4,7 @@ import AdminDoubtAssignmentTable from '../../components/AdminDoubtAssignmentTabl
 import EmptyState from '../../components/EmptyState.jsx';
 import ErrorAlert from '../../components/ErrorAlert.jsx';
 import PageHeader from '../../components/PageHeader.jsx';
+import { getApiErrorMessage } from '../../services/api.js';
 import { adminService } from '../../services/adminService.js';
 import { doubtService } from '../../services/doubtService.js';
 import { mentorService } from '../../services/mentorService.js';
@@ -31,7 +32,7 @@ export default function AdminAnalyticsPage() {
   function loadAnalytics() {
     adminService.analytics()
       .then(setAnalytics)
-      .catch((exception) => setError(exception.response?.data?.message || 'Could not load analytics.'));
+      .catch((exception) => setError(getApiErrorMessage(exception, 'Could not load analytics.')));
   }
 
   function loadDoubts() {
@@ -39,13 +40,13 @@ export default function AdminAnalyticsPage() {
 
     request
       .then(setDoubts)
-      .catch((exception) => setError(exception.response?.data?.message || 'Could not load doubts.'));
+      .catch((exception) => setError(getApiErrorMessage(exception, 'Could not load doubts.')));
   }
 
   function loadMentors() {
     mentorService.all()
       .then(setMentors)
-      .catch((exception) => setError(exception.response?.data?.message || 'Could not load mentors.'));
+      .catch((exception) => setError(getApiErrorMessage(exception, 'Could not load mentors.')));
   }
 
   function reloadAll() {
@@ -62,7 +63,7 @@ export default function AdminAnalyticsPage() {
       const result = await adminService.simulateMentors();
       setSimulation(result.messages);
     } catch (exception) {
-      setError(exception.response?.data?.message || 'Could not run simulation.');
+      setError(getApiErrorMessage(exception, 'Could not run simulation.'));
     } finally {
       setLoading(false);
     }

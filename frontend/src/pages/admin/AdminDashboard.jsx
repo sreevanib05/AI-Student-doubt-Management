@@ -6,6 +6,7 @@ import EmptyState from '../../components/EmptyState.jsx';
 import ErrorAlert from '../../components/ErrorAlert.jsx';
 import PageHeader from '../../components/PageHeader.jsx';
 import StatCard from '../../components/StatCard.jsx';
+import { getApiErrorMessage } from '../../services/api.js';
 import { adminService } from '../../services/adminService.js';
 import { doubtService } from '../../services/doubtService.js';
 import { mentorService } from '../../services/mentorService.js';
@@ -27,7 +28,7 @@ export default function AdminDashboard() {
         setDoubts(doubtData);
         setMentors(mentorData);
       })
-      .catch((exception) => setError(exception.response?.data?.message || 'Could not load admin dashboard.'));
+      .catch((exception) => setError(getApiErrorMessage(exception, 'Could not load admin dashboard.')));
   }
 
   return (

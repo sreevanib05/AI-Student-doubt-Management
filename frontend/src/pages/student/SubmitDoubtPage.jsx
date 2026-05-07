@@ -2,6 +2,7 @@ import { Lightbulb, Send } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import ErrorAlert from '../../components/ErrorAlert.jsx';
 import PageHeader from '../../components/PageHeader.jsx';
+import { getApiErrorMessage } from '../../services/api.js';
 import { doubtService } from '../../services/doubtService.js';
 
 const initialForm = {
@@ -46,7 +47,7 @@ export default function SubmitDoubtPage() {
       setForm(initialForm);
       setSuggestions([]);
     } catch (exception) {
-      setError(exception.response?.data?.message || 'Could not submit doubt.');
+      setError(getApiErrorMessage(exception, 'Could not submit doubt.'));
     } finally {
       setLoading(false);
     }

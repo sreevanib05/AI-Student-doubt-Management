@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import EmptyState from '../../components/EmptyState.jsx';
 import ErrorAlert from '../../components/ErrorAlert.jsx';
 import PageHeader from '../../components/PageHeader.jsx';
+import { getApiErrorMessage } from '../../services/api.js';
 import { adminService } from '../../services/adminService.js';
 import { mentorService } from '../../services/mentorService.js';
 
@@ -28,7 +29,7 @@ export default function MentorManagementPage() {
     setError('');
     mentorService.all()
       .then(setMentors)
-      .catch((exception) => setError(exception.response?.data?.message || 'Could not load mentors.'));
+      .catch((exception) => setError(getApiErrorMessage(exception, 'Could not load mentors.')));
   }
 
   async function handleSubmit(event) {
@@ -43,7 +44,7 @@ export default function MentorManagementPage() {
       setMessage('Mentor account created. The mentor can now sign in from the login page.');
       loadMentors();
     } catch (exception) {
-      setError(exception.response?.data?.message || 'Could not create mentor.');
+      setError(getApiErrorMessage(exception, 'Could not create mentor.'));
     } finally {
       setLoading(false);
     }
