@@ -54,12 +54,17 @@ export function getApiErrorMessage(exception, fallbackMessage) {
 function buildApiBaseUrlCandidates() {
   const candidates = [];
 
+  if (import.meta.env.PROD) {
+    candidates.push(DEFAULT_RENDER_API_BASE_URL);
+    candidates.push('/api');
+  } else {
+    candidates.push('http://localhost:8081/api');
+    candidates.push(DEFAULT_RENDER_API_BASE_URL);
+  }
+
   if (isUsableConfiguredApiBaseUrl(configuredApiBaseUrl)) {
     candidates.push(configuredApiBaseUrl);
   }
-
-  candidates.push(import.meta.env.PROD ? '/api' : 'http://localhost:8081/api');
-  candidates.push(DEFAULT_RENDER_API_BASE_URL);
 
   return [...new Set(candidates.map(normalizeBaseUrl))];
 }
