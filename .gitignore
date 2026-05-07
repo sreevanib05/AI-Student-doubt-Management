@@ -1,0 +1,19 @@
+# macOS and editor files
+.DS_Store
+.idea/
+.vscode/
+
+# Java / Maven
+backend/target/
+*.class
+
+# Node / React
+frontend/node_modules/
+frontend/dist/
+
+# Local secrets - keep these private on your computer
+backend/src/main/resources/application-local.properties
+frontend/.env
+
+# Logs
+*.log
