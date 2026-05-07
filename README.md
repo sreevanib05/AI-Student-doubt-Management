@@ -203,51 +203,75 @@ git push -u origin main
 
 ### Backend on Render
 
-Use `backend` as the root directory.
+This project includes `render.yaml` and `backend/Dockerfile`, so the easiest backend deployment is Render Blueprint / Docker deployment.
 
-Build command:
+In Render:
 
-```bash
-mvn clean package -DskipTests
-```
+1. Open Render.
+2. Click `New +`.
+3. Click `Blueprint`.
+4. Connect this GitHub repository.
+5. Render will read `render.yaml`.
+6. Fill the secret values when Render asks.
 
-Start command:
-
-```bash
-java -jar target/doubtflow-ai-0.0.1-SNAPSHOT.jar
-```
-
-Add these Render environment variables:
+Use these Render environment variables:
 
 ```text
 SPRING_PROFILES_ACTIVE=prod
-DB_URL=jdbc:mysql://YOUR_DATABASE_HOST:3306/doubtflow_ai?useSSL=true&allowPublicKeyRetrieval=true&serverTimezone=UTC
-DB_USERNAME=your_database_username
-DB_PASSWORD=your_database_password
-JWT_SECRET=your_long_base64_secret
-CORS_ALLOWED_ORIGINS=https://your-vercel-app.vercel.app
+DB_URL=jdbc:mysql://YOUR_AIVEN_HOST:YOUR_AIVEN_PORT/YOUR_AIVEN_DATABASE?sslMode=REQUIRED&serverTimezone=UTC
+DB_USERNAME=your_aiven_username
+DB_PASSWORD=your_aiven_password
+JWT_SECRET=Render can generate this from render.yaml
+CORS_ALLOWED_ORIGINS=https://*.vercel.app,http://localhost:5173,http://127.0.0.1:5173
 ```
 
-Your local MySQL database cannot be used directly by Render. Use a hosted MySQL database and run `database/schema.sql` there.
+If your deployment cannot connect to the Aiven hostname, use the IP version of the same JDBC URL.
+
+```text
+DB_URL=jdbc:mysql://YOUR_AIVEN_IP:YOUR_AIVEN_PORT/YOUR_AIVEN_DATABASE?sslMode=REQUIRED&serverTimezone=UTC
+```
+
+The backend health check URL will be:
+
+```text
+https://your-render-backend.onrender.com/api/health
+```
 
 ### Frontend on Vercel
 
-Use `frontend` as the root directory.
+In Vercel:
 
-Build command:
-
-```bash
-npm run build
-```
-
-Output directory:
-
-```text
-dist
-```
+1. Click `Add New`.
+2. Click `Project`.
+3. Import this GitHub repository.
+4. Set Root Directory to `frontend`.
+5. Set Build Command to `npm run build`.
+6. Set Output Directory to `dist`.
 
 Add this Vercel environment variable:
 
 ```text
 VITE_API_BASE_URL=https://your-render-backend.onrender.com/api
+```
+
+The included `frontend/vercel.json` makes React Router page refreshes work after deployment.
+
+### Deployment Order
+
+Use this order:
+
+1. Deploy backend on Render.
+2. Copy the Render backend URL.
+3. Deploy frontend on Vercel with `VITE_API_BASE_URL`.
+4. Test login/register from the Vercel URL.
+
+### Important Security Note
+
+Do not commit real passwords or API keys. Keep them only in:
+
+```text
+backend/src/main/resources/application-local.properties
+frontend/.env
+Render Environment Variables
+Vercel Environment Variables
 ```
