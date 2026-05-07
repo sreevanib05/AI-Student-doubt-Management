@@ -198,3 +198,56 @@ git add .
 git commit -m "Build DoubtFlow AI full stack dashboard"
 git push -u origin main
 ```
+
+## Deployment Notes
+
+### Backend on Render
+
+Use `backend` as the root directory.
+
+Build command:
+
+```bash
+mvn clean package -DskipTests
+```
+
+Start command:
+
+```bash
+java -jar target/doubtflow-ai-0.0.1-SNAPSHOT.jar
+```
+
+Add these Render environment variables:
+
+```text
+SPRING_PROFILES_ACTIVE=prod
+DB_URL=jdbc:mysql://YOUR_DATABASE_HOST:3306/doubtflow_ai?useSSL=true&allowPublicKeyRetrieval=true&serverTimezone=UTC
+DB_USERNAME=your_database_username
+DB_PASSWORD=your_database_password
+JWT_SECRET=your_long_base64_secret
+CORS_ALLOWED_ORIGINS=https://your-vercel-app.vercel.app
+```
+
+Your local MySQL database cannot be used directly by Render. Use a hosted MySQL database and run `database/schema.sql` there.
+
+### Frontend on Vercel
+
+Use `frontend` as the root directory.
+
+Build command:
+
+```bash
+npm run build
+```
+
+Output directory:
+
+```text
+dist
+```
+
+Add this Vercel environment variable:
+
+```text
+VITE_API_BASE_URL=https://your-render-backend.onrender.com/api
+```
