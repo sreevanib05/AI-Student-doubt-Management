@@ -14,14 +14,29 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Set;
 
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
+
+    private static final Set<String> PUBLIC_PATHS = Set.of(
+            "/api/health",
+            "/api/auth/login",
+            "/api/auth/student/register",
+            "/api/auth/mentor/register",
+            "/api/students/register",
+            "/api/students/login"
+    );
 
     private final JwtService jwtService;
 
     public JwtAuthenticationFilter(JwtService jwtService) {
         this.jwtService = jwtService;
+    }
+
+    @Override
+    protected boolean shouldNotFilter(HttpServletRequest request) {
+        return "OPTIONS".equalsIgnoreCase(request.getMethod()) || PUBLIC_PATHS.contains(request.getServletPath());
     }
 
     @Override
@@ -37,14 +52,18 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         String token = authorizationHeader.substring(7);
 
-        if (jwtService.isValid(token) && SecurityContextHolder.getContext().getAuthentication() == null) {
-            UserPrincipal user = jwtService.parseUser(token);
-            SimpleGrantedAuthority authority = new SimpleGrantedAuthority("ROLE_" + user.getRole().name());
+        if (SecurityContextHolder.getContext().getAuthentication() == null) {
+            try {
+                UserPrincipal user = jwtService.parseUser(token);
+                SimpleGrantedAuthority authority = new SimpleGrantedAuthority("ROLE_" + user.getRole().name());
 
-            UsernamePasswordAuthenticationToken authentication =
-                    new UsernamePasswordAuthenticationToken(user, null, List.of(authority));
+                UsernamePasswordAuthenticationToken authentication =
+                        new UsernamePasswordAuthenticationToken(user, null, List.of(authority));
 
-            SecurityContextHolder.getContext().setAuthentication(authentication);
+                SecurityContextHolder.getContext().setAuthentication(authentication);
+            } catch (RuntimeException ignored) {
+                // Invalid tokens stay unauthenticated and are rejected by protected endpoints.
+            }
         }
 
         filterChain.doFilter(request, response);

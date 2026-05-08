@@ -1,6 +1,10 @@
 import axios from 'axios';
 
 const DEFAULT_RENDER_API_BASE_URL = 'https://doubtflow-ai-backend.onrender.com/api';
+const LOCAL_API_BASE_URL = 'http://localhost:8081/api';
+const RELATIVE_API_BASE_URL = '/api';
+const REQUEST_TIMEOUT_MS = 20000;
+const WARM_UP_TIMEOUT_MS = 6000;
 const configuredApiBaseUrl = import.meta.env.VITE_API_BASE_URL?.trim();
 
 const API_BASE_URL_CANDIDATES = buildApiBaseUrlCandidates();
@@ -8,12 +12,23 @@ export const API_BASE_URL = API_BASE_URL_CANDIDATES[0];
 
 const api = axios.create({
   baseURL: API_BASE_URL,
+  timeout: REQUEST_TIMEOUT_MS,
+  transitional: {
+    clarifyTimeoutError: true,
+  },
 });
 
 api.interceptors.request.use((config) => {
+  config._triedBaseUrls = getTriedBaseUrls(config);
+
+  if (config._skipAuth) {
+    return config;
+  }
+
   const token = localStorage.getItem('doubtflow_token');
 
   if (token) {
+    config.headers = config.headers || {};
     config.headers.Authorization = `Bearer ${token}`;
   }
 
@@ -42,35 +57,59 @@ export function getApiErrorMessage(exception, fallbackMessage) {
 
   if (!exception.response) {
     const triedBaseUrls = getTriedBaseUrls(exception.config);
+    const reason = isTimeoutError(exception)
+      ? 'The backend did not respond quickly enough.'
+      : 'Could not reach the backend.';
 
     return import.meta.env.PROD
-      ? `Could not reach the backend. Tried ${formatBaseUrls(triedBaseUrls)}. Please wait a few seconds and try again.`
-      : `Could not reach the backend at ${formatBaseUrls(triedBaseUrls)}. Start the backend and try again.`;
+      ? `${reason} Tried ${formatBaseUrls(triedBaseUrls)}. Please wait a few seconds and try again.`
+      : `${reason} Tried ${formatBaseUrls(triedBaseUrls)}. Start the backend and try again.`;
   }
 
   return fallbackMessage;
 }
 
+let warmUpPromise = null;
+
+export function warmUpApi() {
+  if (!warmUpPromise) {
+    warmUpPromise = api.get('/health', {
+      _skipAuth: true,
+      timeout: WARM_UP_TIMEOUT_MS,
+    }).catch(() => null)
+      .finally(() => {
+        warmUpPromise = null;
+      });
+  }
+
+  return warmUpPromise;
+}
+
 function buildApiBaseUrlCandidates() {
   const candidates = [];
 
-  if (import.meta.env.PROD) {
-    candidates.push(DEFAULT_RENDER_API_BASE_URL);
-    candidates.push('/api');
-  } else {
-    candidates.push('http://localhost:8081/api');
-    candidates.push(DEFAULT_RENDER_API_BASE_URL);
-  }
-
   if (isUsableConfiguredApiBaseUrl(configuredApiBaseUrl)) {
     candidates.push(configuredApiBaseUrl);
+  }
+
+  if (import.meta.env.PROD) {
+    candidates.push(RELATIVE_API_BASE_URL);
+    candidates.push(DEFAULT_RENDER_API_BASE_URL);
+  } else {
+    candidates.push(LOCAL_API_BASE_URL);
+    candidates.push(DEFAULT_RENDER_API_BASE_URL);
   }
 
   return [...new Set(candidates.map(normalizeBaseUrl))];
 }
 
 function getNextFallbackBaseUrl(exception) {
-  if (exception.response || !exception.config || isAbsoluteUrl(exception.config.url)) {
+  if (
+    exception.response ||
+    !exception.config ||
+    isAbsoluteUrl(exception.config.url) ||
+    !canRetryWithFallback(exception.config)
+  ) {
     return null;
   }
 
@@ -100,6 +139,24 @@ function normalizeBaseUrl(url) {
 
 function isAbsoluteUrl(url = '') {
   return /^[a-z][a-z\d+\-.]*:\/\//i.test(url);
+}
+
+function canRetryWithFallback(config) {
+  const method = (config?.method || 'get').toLowerCase();
+
+  if (['get', 'head', 'options'].includes(method)) {
+    return true;
+  }
+
+  return isLoginEndpoint(config?.url);
+}
+
+function isLoginEndpoint(url = '') {
+  return ['/auth/login', '/students/login'].includes(url);
+}
+
+function isTimeoutError(exception) {
+  return exception.code === 'ECONNABORTED' || exception.code === 'ETIMEDOUT';
 }
 
 function isLocalApiBaseUrl(url) {

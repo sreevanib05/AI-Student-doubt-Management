@@ -1,5 +1,5 @@
-import { createContext, useContext, useMemo, useState } from 'react';
-import api from './api';
+import { createContext, useContext, useEffect, useMemo, useState } from 'react';
+import api, { warmUpApi } from './api';
 
 const AuthContext = createContext(null);
 
@@ -8,6 +8,10 @@ export function AuthProvider({ children }) {
     const savedUser = localStorage.getItem('doubtflow_user');
     return savedUser ? JSON.parse(savedUser) : null;
   });
+
+  useEffect(() => {
+    warmUpApi();
+  }, []);
 
   async function login({ email, password, role }) {
     const response = await api.post('/auth/login', { email, password, role });
