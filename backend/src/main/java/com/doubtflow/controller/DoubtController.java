@@ -1,6 +1,7 @@
 package com.doubtflow.controller;
 
 import com.doubtflow.dto.CreateDoubtRequest;
+import com.doubtflow.dto.DoubtAttachment;
 import com.doubtflow.dto.DoubtStatusRequest;
 import com.doubtflow.dto.FAQSuggestion;
 import com.doubtflow.exception.DuplicateDoubtException;
@@ -8,6 +9,10 @@ import com.doubtflow.exception.InvalidCategoryException;
 import com.doubtflow.model.Doubt;
 import com.doubtflow.model.UserPrincipal;
 import com.doubtflow.service.DoubtService;
+import org.springframework.http.ContentDisposition;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -67,6 +72,23 @@ public class DoubtController {
     @PreAuthorize("hasRole('ADMIN')")
     public List<Doubt> byCategory(@PathVariable String category, Authentication authentication) throws InvalidCategoryException {
         return doubtService.getDoubtsByCategory(category, currentUser(authentication));
+    }
+
+    @GetMapping("/{id}/attachment")
+    @PreAuthorize("hasAnyRole('STUDENT', 'MENTOR', 'ADMIN')")
+    public ResponseEntity<byte[]> attachment(@PathVariable Long id, Authentication authentication) {
+        DoubtAttachment attachment = doubtService.getAttachment(id, currentUser(authentication));
+        MediaType contentType = attachment.contentType() == null
+                ? MediaType.APPLICATION_PDF
+                : MediaType.parseMediaType(attachment.contentType());
+
+        return ResponseEntity.ok()
+                .contentType(contentType)
+                .header(HttpHeaders.CONTENT_DISPOSITION, ContentDisposition.inline()
+                        .filename(attachment.fileName())
+                        .build()
+                        .toString())
+                .body(attachment.data());
     }
 
     @PatchMapping("/{id}/status")

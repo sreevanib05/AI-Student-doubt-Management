@@ -1,9 +1,10 @@
-import { Play, RefreshCw } from 'lucide-react';
+import { BookOpen, Clock3, FileText, Play, RefreshCw } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import AdminDoubtAssignmentTable from '../../components/AdminDoubtAssignmentTable.jsx';
 import EmptyState from '../../components/EmptyState.jsx';
 import ErrorAlert from '../../components/ErrorAlert.jsx';
 import PageHeader from '../../components/PageHeader.jsx';
+import StatCard from '../../components/StatCard.jsx';
 import { getApiErrorMessage } from '../../services/api.js';
 import { adminService } from '../../services/adminService.js';
 import { doubtService } from '../../services/doubtService.js';
@@ -77,11 +78,24 @@ export default function AdminAnalyticsPage() {
     return Math.max(...analytics.categoryStats.map((item) => item.total));
   }, [analytics]);
 
+  const maxSubjectTotal = useMemo(() => {
+    if (!analytics?.subjectStats?.length) {
+      return 1;
+    }
+
+    return Math.max(...analytics.subjectStats.map((item) => item.total));
+  }, [analytics]);
+
+  const averageResolutionHours = useMemo(() => {
+    const value = analytics?.averageResolutionHours || 0;
+    return value > 0 ? `${value.toFixed(1)}h` : '0h';
+  }, [analytics]);
+
   return (
     <>
       <PageHeader
-        title="Analytics"
-        description="Filter doubts by category and review mentor monitoring data."
+        title="Teacher Analytics"
+        description="Filter doubts by category and review subject, context, file, and mentor signals."
         action={
           <div className="flex items-center gap-3">
             <button type="button" className="secondary-button" onClick={reloadAll}>
@@ -97,6 +111,13 @@ export default function AdminAnalyticsPage() {
       />
 
       <ErrorAlert message={error} />
+
+      <div className="mt-6 grid grid-cols-4 gap-5">
+        <StatCard label="PDF Doubts" value={analytics?.pdfAttachmentCount ?? 0} icon={FileText} tone="blue" />
+        <StatCard label="Context Notes" value={analytics?.contextRichDoubts ?? 0} icon={BookOpen} tone="green" />
+        <StatCard label="Avg Resolution" value={averageResolutionHours} icon={Clock3} tone="amber" />
+        <StatCard label="Active Doubts" value={(analytics?.openDoubts ?? 0) + (analytics?.assignedDoubts ?? 0) + (analytics?.inProgressDoubts ?? 0)} icon={RefreshCw} tone="slate" />
+      </div>
 
       <div className="mt-6 grid grid-cols-[420px_minmax(0,1fr)] gap-6">
         <section className="rounded-lg border border-slate-200 bg-white p-5 shadow-dashboard">
@@ -119,6 +140,32 @@ export default function AdminAnalyticsPage() {
               ))
             ) : (
               <p className="text-sm text-slate-500">No category data yet.</p>
+            )}
+          </div>
+
+          <h2 className="mt-8 text-base font-bold text-slate-950">Subject Signals</h2>
+          <div className="mt-5 space-y-4">
+            {analytics?.subjectStats?.length > 0 ? (
+              analytics.subjectStats.map((item) => (
+                <div key={item.subject}>
+                  <div className="mb-1 flex items-center justify-between text-sm">
+                    <span className="font-medium text-slate-700">{item.subject}</span>
+                    <span className="text-slate-500">{item.total}</span>
+                  </div>
+                  <div className="h-3 rounded-lg bg-slate-100">
+                    <div
+                      className="h-3 rounded-lg bg-emerald-500"
+                      style={{ width: `${Math.max((item.total / maxSubjectTotal) * 100, 8)}%` }}
+                    />
+                  </div>
+                  <div className="mt-1 flex items-center justify-between text-xs text-slate-500">
+                    <span>{item.active} active</span>
+                    <span>{item.resolved} resolved</span>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <p className="text-sm text-slate-500">No subject data yet.</p>
             )}
           </div>
 

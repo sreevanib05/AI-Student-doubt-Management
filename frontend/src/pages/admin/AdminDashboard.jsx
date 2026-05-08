@@ -39,7 +39,7 @@ export default function AdminDashboard() {
         action={
           <Link to="/admin/analytics" className="primary-button">
             <BarChart3 size={17} />
-            Analytics
+            Teacher Analytics
           </Link>
         }
       />

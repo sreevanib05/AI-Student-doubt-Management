@@ -24,7 +24,7 @@ const navigation = {
   ],
   ADMIN: [
     { to: '/admin', label: 'Dashboard', icon: LayoutDashboard },
-    { to: '/admin/analytics', label: 'Analytics', icon: BarChart3 },
+    { to: '/admin/analytics', label: 'Teacher Analytics', icon: BarChart3 },
     { to: '/admin/mentors', label: 'Mentors', icon: Users },
   ],
 };

@@ -1,4 +1,4 @@
-import { CheckCircle2, RefreshCw, Save } from 'lucide-react';
+import { BookOpen, CheckCircle2, FileText, RefreshCw, Save, Sparkles } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import EmptyState from '../../components/EmptyState.jsx';
 import ErrorAlert from '../../components/ErrorAlert.jsx';
@@ -59,6 +59,10 @@ export default function AssignedDoubtsPage() {
     }
   }
 
+  function openAttachment(doubtId) {
+    doubtService.openAttachment(doubtId).catch(() => setError('Could not open the PDF attachment.'));
+  }
+
   return (
     <>
       <PageHeader
@@ -88,7 +92,20 @@ export default function AssignedDoubtsPage() {
                   <h2 className="text-lg font-bold text-slate-950">{doubt.title}</h2>
                   <StatusBadge status={doubt.status} />
                 </div>
-                <p className="text-sm font-medium text-primary">{doubt.category}</p>
+                <div className="flex flex-wrap items-center gap-2 text-sm font-medium">
+                  <span className="rounded-md bg-blue-50 px-2 py-1 text-primary">{doubt.subject || 'General'}</span>
+                  <span className="rounded-md bg-slate-100 px-2 py-1 text-slate-600">{doubt.category}</span>
+                  {doubt.hasPdfAttachment && (
+                    <button
+                      type="button"
+                      className="inline-flex items-center gap-1 rounded-md bg-blue-50 px-2 py-1 text-primary"
+                      onClick={() => openAttachment(doubt.id)}
+                    >
+                      <FileText size={14} />
+                      PDF
+                    </button>
+                  )}
+                </div>
                 <p className="mt-3 max-w-3xl text-sm leading-6 text-slate-600">{doubt.description}</p>
                 <p className="mt-3 text-xs text-slate-500">Student: {doubt.studentName}</p>
               </div>
@@ -114,6 +131,30 @@ export default function AssignedDoubtsPage() {
                 </button>
               </div>
             </div>
+
+            {(doubt.contextNotes || doubt.promptTemplate) && (
+              <div className="mt-5 grid grid-cols-2 gap-3">
+                {doubt.contextNotes && (
+                  <div className="rounded-lg border border-slate-200 bg-slate-50 p-3">
+                    <div className="mb-2 flex items-center gap-2 text-sm font-semibold text-slate-800">
+                      <BookOpen size={15} />
+                      Context Memory
+                    </div>
+                    <p className="whitespace-pre-line text-sm leading-6 text-slate-600">{doubt.contextNotes}</p>
+                  </div>
+                )}
+
+                {doubt.promptTemplate && (
+                  <div className="rounded-lg border border-blue-100 bg-blue-50 p-3">
+                    <div className="mb-2 flex items-center gap-2 text-sm font-semibold text-primary">
+                      <Sparkles size={15} />
+                      Prompt Template
+                    </div>
+                    <p className="whitespace-pre-line text-sm leading-6 text-slate-600">{doubt.promptTemplate}</p>
+                  </div>
+                )}
+              </div>
+            )}
 
             <div className="mt-5 grid grid-cols-[minmax(0,1fr)_180px] gap-3">
               <textarea

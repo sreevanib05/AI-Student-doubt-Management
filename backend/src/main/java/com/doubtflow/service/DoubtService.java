@@ -2,6 +2,7 @@ package com.doubtflow.service;
 
 import com.doubtflow.dto.AssignMentorRequest;
 import com.doubtflow.dto.CreateDoubtRequest;
+import com.doubtflow.dto.DoubtAttachment;
 import com.doubtflow.dto.DoubtStatusRequest;
 import com.doubtflow.dto.FAQSuggestion;
 import com.doubtflow.dto.MentorResponseRequest;
@@ -21,10 +22,16 @@ import com.doubtflow.repository.ResponseRepository;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 
+import java.util.Base64;
 import java.util.List;
 
 @Service
 public class DoubtService {
+
+    private static final int MAX_SUBJECT_LENGTH = 80;
+    private static final int MAX_CONTEXT_LENGTH = 3000;
+    private static final int MAX_PROMPT_LENGTH = 2500;
+    private static final int MAX_PDF_BYTES = 3 * 1024 * 1024;
 
     private final DoubtRepository doubtRepository;
     private final MentorRepository mentorRepository;
@@ -59,12 +66,28 @@ public class DoubtService {
         Doubt doubt = DoubtFactory.createDoubt(category.name());
         doubt.setTitle(request.title().trim());
         doubt.setDescription(request.description().trim());
+        doubt.setSubject(normalizeSubject(request.subject()));
+        doubt.setContextNotes(normalizeOptionalText(request.contextNotes(), MAX_CONTEXT_LENGTH, "Context notes"));
+        doubt.setPromptTemplate(normalizeOptionalText(request.promptTemplate(), MAX_PROMPT_LENGTH, "Prompt template"));
+        attachPdfIfPresent(doubt, request);
         doubt.setStudentId(currentUser.getId());
 
         // Admin/faculty assigns the mentor from the Admin dashboard.
         doubt.setStatus(DoubtStatus.OPEN);
 
         return doubtRepository.save(doubt);
+    }
+
+    public DoubtAttachment getAttachment(Long doubtId, UserPrincipal currentUser) {
+        Doubt doubt = doubtRepository.findById(doubtId)
+                .orElseThrow(() -> new IllegalArgumentException("Doubt not found."));
+
+        if (!canViewDoubt(doubt, currentUser)) {
+            throw new AccessDeniedException("You cannot view this doubt attachment.");
+        }
+
+        return doubtRepository.findAttachmentById(doubtId)
+                .orElseThrow(() -> new IllegalArgumentException("No PDF attachment found for this doubt."));
     }
 
     public Doubt assignMentor(Long doubtId, AssignMentorRequest request, UserPrincipal currentUser) {
@@ -189,6 +212,101 @@ public class DoubtService {
         if (request.description() == null || request.description().isBlank()) {
             throw new IllegalArgumentException("Doubt description is required.");
         }
+    }
+
+    private String normalizeSubject(String subject) {
+        String normalizedSubject = subject == null || subject.isBlank() ? "General" : subject.trim();
+
+        if (normalizedSubject.length() > MAX_SUBJECT_LENGTH) {
+            throw new IllegalArgumentException("Subject must be " + MAX_SUBJECT_LENGTH + " characters or less.");
+        }
+
+        return normalizedSubject;
+    }
+
+    private String normalizeOptionalText(String value, int maxLength, String label) {
+        if (value == null || value.isBlank()) {
+            return null;
+        }
+
+        String trimmedValue = value.trim();
+
+        if (trimmedValue.length() > maxLength) {
+            throw new IllegalArgumentException(label + " must be " + maxLength + " characters or less.");
+        }
+
+        return trimmedValue;
+    }
+
+    private void attachPdfIfPresent(Doubt doubt, CreateDoubtRequest request) {
+        if (request.pdfData() == null || request.pdfData().isBlank()) {
+            return;
+        }
+
+        String pdfData = stripDataUrlPrefix(request.pdfData().trim());
+        byte[] pdfBytes;
+
+        try {
+            pdfBytes = Base64.getDecoder().decode(pdfData);
+        } catch (IllegalArgumentException exception) {
+            throw new IllegalArgumentException("PDF attachment is not valid.");
+        }
+
+        if (pdfBytes.length > MAX_PDF_BYTES) {
+            throw new IllegalArgumentException("PDF attachment must be 3 MB or smaller.");
+        }
+
+        if (!startsWithPdfHeader(pdfBytes)) {
+            throw new IllegalArgumentException("Only PDF attachments are allowed.");
+        }
+
+        doubt.setPdfData(Base64.getEncoder().encodeToString(pdfBytes));
+        doubt.setPdfFileName(normalizePdfFileName(request.pdfFileName()));
+        doubt.setPdfContentType("application/pdf");
+        doubt.setHasPdfAttachment(true);
+    }
+
+    private String stripDataUrlPrefix(String pdfData) {
+        int commaIndex = pdfData.indexOf(',');
+        return pdfData.startsWith("data:") && commaIndex >= 0 ? pdfData.substring(commaIndex + 1) : pdfData;
+    }
+
+    private boolean startsWithPdfHeader(byte[] bytes) {
+        return bytes.length >= 4
+                && bytes[0] == '%'
+                && bytes[1] == 'P'
+                && bytes[2] == 'D'
+                && bytes[3] == 'F';
+    }
+
+    private String normalizePdfFileName(String fileName) {
+        String normalizedFileName = fileName == null || fileName.isBlank() ? "doubt-attachment.pdf" : fileName.trim();
+        normalizedFileName = normalizedFileName.replace("\\", "/");
+        int slashIndex = normalizedFileName.lastIndexOf('/');
+
+        if (slashIndex >= 0) {
+            normalizedFileName = normalizedFileName.substring(slashIndex + 1);
+        }
+
+        normalizedFileName = normalizedFileName.replaceAll("[\\r\\n\"]", "").trim();
+
+        if (!normalizedFileName.toLowerCase().endsWith(".pdf")) {
+            normalizedFileName = normalizedFileName + ".pdf";
+        }
+
+        return normalizedFileName.length() > 120 ? normalizedFileName.substring(0, 116) + ".pdf" : normalizedFileName;
+    }
+
+    private boolean canViewDoubt(Doubt doubt, UserPrincipal currentUser) {
+        if (currentUser.getRole() == Role.ADMIN) {
+            return true;
+        }
+
+        if (currentUser.getRole() == Role.STUDENT) {
+            return currentUser.getId().equals(doubt.getStudentId());
+        }
+
+        return currentUser.getRole() == Role.MENTOR && currentUser.getId().equals(doubt.getMentorId());
     }
 
     private void requireRole(UserPrincipal user, Role expectedRole) {

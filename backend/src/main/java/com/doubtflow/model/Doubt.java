@@ -1,5 +1,6 @@
 package com.doubtflow.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.doubtflow.interfaces.Assignable;
 
 import java.time.LocalDateTime;
@@ -9,6 +10,13 @@ public class Doubt implements Assignable {
     protected Long id;
     protected String title;
     protected String description;
+    protected String subject;
+    protected String contextNotes;
+    protected String promptTemplate;
+    protected String pdfFileName;
+    protected String pdfContentType;
+    protected String pdfData;
+    protected boolean hasPdfAttachment;
     protected DoubtCategory category;
     protected DoubtStatus status;
     protected Long studentId;
@@ -53,6 +61,63 @@ public class Doubt implements Assignable {
 
     public void setDescription(String description) {
         this.description = description;
+    }
+
+    public String getSubject() {
+        return subject;
+    }
+
+    public void setSubject(String subject) {
+        this.subject = subject;
+    }
+
+    public String getContextNotes() {
+        return contextNotes;
+    }
+
+    public void setContextNotes(String contextNotes) {
+        this.contextNotes = contextNotes;
+    }
+
+    public String getPromptTemplate() {
+        return promptTemplate;
+    }
+
+    public void setPromptTemplate(String promptTemplate) {
+        this.promptTemplate = promptTemplate;
+    }
+
+    public String getPdfFileName() {
+        return pdfFileName;
+    }
+
+    public void setPdfFileName(String pdfFileName) {
+        this.pdfFileName = pdfFileName;
+    }
+
+    public String getPdfContentType() {
+        return pdfContentType;
+    }
+
+    public void setPdfContentType(String pdfContentType) {
+        this.pdfContentType = pdfContentType;
+    }
+
+    @JsonIgnore
+    public String getPdfData() {
+        return pdfData;
+    }
+
+    public void setPdfData(String pdfData) {
+        this.pdfData = pdfData;
+    }
+
+    public boolean isHasPdfAttachment() {
+        return hasPdfAttachment;
+    }
+
+    public void setHasPdfAttachment(boolean hasPdfAttachment) {
+        this.hasPdfAttachment = hasPdfAttachment;
     }
 
     public DoubtCategory getCategory() {

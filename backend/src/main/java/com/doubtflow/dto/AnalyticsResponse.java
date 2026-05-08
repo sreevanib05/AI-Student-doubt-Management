@@ -10,7 +10,11 @@ public record AnalyticsResponse(
         long resolvedDoubts,
         long totalStudents,
         long totalMentors,
+        long pdfAttachmentCount,
+        long contextRichDoubts,
+        double averageResolutionHours,
         List<CategoryStat> categoryStats,
+        List<SubjectStat> subjectStats,
         List<MentorWorkload> mentorWorkloads
 ) {
 }

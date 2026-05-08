@@ -39,7 +39,11 @@ public class AdminService {
                 doubtRepository.countByStatus(DoubtStatus.RESOLVED),
                 studentRepository.count(),
                 mentorRepository.count(),
+                doubtRepository.countWithPdfAttachments(),
+                doubtRepository.countWithContextNotes(),
+                doubtRepository.averageResolutionHours(),
                 doubtRepository.countByCategory(),
+                doubtRepository.countBySubject(),
                 mentorRepository.findWorkloads()
         );
     }

@@ -1,7 +1,8 @@
-import { Save, UserMinus } from 'lucide-react';
+import { BookOpen, FileText, Save, UserMinus } from 'lucide-react';
 import { useState } from 'react';
 import { getApiErrorMessage } from '../services/api.js';
 import { adminService } from '../services/adminService.js';
+import { doubtService } from '../services/doubtService.js';
 import ErrorAlert from './ErrorAlert.jsx';
 import StatusBadge from './StatusBadge.jsx';
 
@@ -45,6 +46,10 @@ export default function AdminDoubtAssignmentTable({ doubts, mentors, onChanged }
     }
   }
 
+  function openAttachment(doubtId) {
+    doubtService.openAttachment(doubtId).catch(() => setError('Could not open the PDF attachment.'));
+  }
+
   return (
     <div className="space-y-3">
       <ErrorAlert message={error} />
@@ -53,10 +58,35 @@ export default function AdminDoubtAssignmentTable({ doubts, mentors, onChanged }
         {doubts.map((doubt) => (
           <article key={doubt.id} className="rounded-lg border border-slate-200 bg-white p-4 shadow-dashboard">
             <div className="grid grid-cols-12 items-start gap-4">
-              <div className="col-span-12 min-w-0 xl:col-span-5">
+              <div className="col-span-12 min-w-0 xl:col-span-4">
                 <p className="break-words text-base font-bold text-slate-950">{doubt.title}</p>
                 <p className="mt-1 line-clamp-2 break-words text-sm leading-6 text-slate-500">{doubt.description}</p>
                 <p className="mt-2 text-xs font-medium text-slate-500">Student: {doubt.studentName}</p>
+                {(doubt.contextNotes || doubt.hasPdfAttachment) && (
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    {doubt.contextNotes && (
+                      <span className="inline-flex items-center gap-1 rounded-md bg-slate-100 px-2 py-1 text-xs font-medium text-slate-600">
+                        <BookOpen size={12} />
+                        Context
+                      </span>
+                    )}
+                    {doubt.hasPdfAttachment && (
+                      <button
+                        type="button"
+                        className="inline-flex items-center gap-1 rounded-md bg-blue-50 px-2 py-1 text-xs font-semibold text-primary"
+                        onClick={() => openAttachment(doubt.id)}
+                      >
+                        <FileText size={12} />
+                        PDF
+                      </button>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              <div className="col-span-4 xl:col-span-2">
+                <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Subject</p>
+                <p className="mt-2 text-sm font-semibold text-slate-700">{doubt.subject || 'General'}</p>
               </div>
 
               <div className="col-span-4 xl:col-span-2">
@@ -71,7 +101,7 @@ export default function AdminDoubtAssignmentTable({ doubts, mentors, onChanged }
                 </div>
               </div>
 
-              <div className="col-span-4 min-w-0 xl:col-span-3">
+              <div className="col-span-4 min-w-0 xl:col-span-2">
                 <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Current Mentor</p>
                 <p className="mt-2 break-words text-sm font-semibold text-slate-700">{doubt.mentorName || 'Unassigned'}</p>
               </div>
