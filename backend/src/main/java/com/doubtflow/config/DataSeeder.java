@@ -23,22 +23,29 @@ public class DataSeeder implements CommandLineRunner {
 
     @Override
     public void run(String... args) {
-        if (adminRepository.count() == 0) {
-            Admin admin = new Admin();
-            admin.setName("Faculty Admin");
-            admin.setEmail("admin@doubtflow.ai");
-            admin.setPasswordHash(passwordEncoder.encode("Admin@123"));
-            adminRepository.save(admin);
-        }
-
-        if (mentorRepository.count() == 0) {
-            createMentor("Aarav Mentor", "mentor.concepts@doubtflow.ai", "Conceptual Java");
-            createMentor("Meera Mentor", "mentor.coding@doubtflow.ai", "Coding Practice");
-            createMentor("Rahul Mentor", "mentor.debugging@doubtflow.ai", "Debugging Errors");
-        }
+        createAdminIfMissing("Faculty Admin", "admin@doubtflow.ai");
+        createMentorIfMissing("Aarav Mentor", "mentor.concepts@doubtflow.ai", "Conceptual Java");
+        createMentorIfMissing("Meera Mentor", "mentor.coding@doubtflow.ai", "Coding Practice");
+        createMentorIfMissing("Rahul Mentor", "mentor.debugging@doubtflow.ai", "Debugging Errors");
     }
 
-    private void createMentor(String name, String email, String expertise) {
+    private void createAdminIfMissing(String name, String email) {
+        if (adminRepository.findByEmail(email).isPresent()) {
+            return;
+        }
+
+        Admin admin = new Admin();
+        admin.setName(name);
+        admin.setEmail(email);
+        admin.setPasswordHash(passwordEncoder.encode("Admin@123"));
+        adminRepository.save(admin);
+    }
+
+    private void createMentorIfMissing(String name, String email, String expertise) {
+        if (mentorRepository.findByEmail(email).isPresent()) {
+            return;
+        }
+
         Mentor mentor = new Mentor();
         mentor.setName(name);
         mentor.setEmail(email);

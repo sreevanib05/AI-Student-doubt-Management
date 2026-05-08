@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useMemo, useState } from 'react';
-import api, { warmUpApi } from './api';
+import api, { LOGIN_TIMEOUT_MS, warmUpApi } from './api';
 
 const AuthContext = createContext(null);
 
@@ -14,7 +14,7 @@ export function AuthProvider({ children }) {
   }, []);
 
   async function login({ email, password, role }) {
-    const response = await api.post('/auth/login', { email, password, role });
+    const response = await api.post('/auth/login', { email, password, role }, { timeout: LOGIN_TIMEOUT_MS });
     saveSession(response.data);
     return response.data;
   }

@@ -4,6 +4,7 @@ const DEFAULT_RENDER_API_BASE_URL = 'https://doubtflow-ai-backend.onrender.com/a
 const LOCAL_API_BASE_URL = 'http://localhost:8081/api';
 const RELATIVE_API_BASE_URL = '/api';
 const REQUEST_TIMEOUT_MS = 20000;
+export const LOGIN_TIMEOUT_MS = 60000;
 const WARM_UP_TIMEOUT_MS = 6000;
 const configuredApiBaseUrl = import.meta.env.VITE_API_BASE_URL?.trim();
 
@@ -64,6 +65,14 @@ export function getApiErrorMessage(exception, fallbackMessage) {
     return import.meta.env.PROD
       ? `${reason} Tried ${formatBaseUrls(triedBaseUrls)}. Please wait a few seconds and try again.`
       : `${reason} Tried ${formatBaseUrls(triedBaseUrls)}. Start the backend and try again.`;
+  }
+
+  if (exception.response.status === 404) {
+    return `Backend route not found. Check that VITE_API_BASE_URL ends with /api and points to your Render backend.`;
+  }
+
+  if (exception.response.status >= 500) {
+    return `Backend error (${exception.response.status}). Check Render logs and environment variables.`;
   }
 
   return fallbackMessage;

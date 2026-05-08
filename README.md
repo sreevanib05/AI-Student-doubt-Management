@@ -98,7 +98,7 @@ http://127.0.0.1:5173
 
 ## Starter Accounts
 
-These are created automatically when the backend starts and the `admins` / `mentors` tables are empty.
+These are created automatically when the backend starts if each email is missing from the database.
 
 ```text
 Admin:
@@ -225,6 +225,12 @@ JWT_SECRET=Render can generate this from render.yaml
 CORS_ALLOWED_ORIGINS=https://*.vercel.app,http://localhost:5173,http://127.0.0.1:5173
 ```
 
+For a custom Vercel domain or a specific production URL, include it too:
+
+```text
+CORS_ALLOWED_ORIGINS=https://*.vercel.app,https://YOUR_VERCEL_PROJECT.vercel.app,http://localhost:5173,http://127.0.0.1:5173
+```
+
 If your deployment cannot connect to the Aiven hostname, use the IP version of the same JDBC URL.
 
 ```text
@@ -235,6 +241,12 @@ The backend health check URL will be:
 
 ```text
 https://your-render-backend.onrender.com/api/health
+```
+
+Expected healthy response:
+
+```json
+{"status":"UP","database":"UP","jwt":"UP"}
 ```
 
 ### Frontend on Vercel

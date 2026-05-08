@@ -63,6 +63,15 @@ public class JwtService {
         }
     }
 
+    public boolean isConfigured() {
+        try {
+            getSigningKey();
+            return true;
+        } catch (RuntimeException exception) {
+            return false;
+        }
+    }
+
     private SecretKey getSigningKey() {
         String secret = jwtSecret == null ? "" : jwtSecret.trim();
 
