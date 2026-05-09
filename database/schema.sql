@@ -73,7 +73,66 @@ CREATE TABLE IF NOT EXISTS responses (
         ON DELETE CASCADE
 );
 
-CREATE INDEX idx_doubts_student ON doubts(student_id);
-CREATE INDEX idx_doubts_mentor ON doubts(mentor_id);
-CREATE INDEX idx_doubts_category ON doubts(category);
-CREATE INDEX idx_doubts_status ON doubts(status);
+SET @index_exists = (
+    SELECT COUNT(*)
+    FROM INFORMATION_SCHEMA.STATISTICS
+    WHERE TABLE_SCHEMA = DATABASE()
+      AND TABLE_NAME = 'doubts'
+      AND INDEX_NAME = 'idx_doubts_student'
+);
+SET @create_index_sql = IF(
+    @index_exists = 0,
+    'CREATE INDEX idx_doubts_student ON doubts(student_id)',
+    'DO 0'
+);
+PREPARE create_index_stmt FROM @create_index_sql;
+EXECUTE create_index_stmt;
+DEALLOCATE PREPARE create_index_stmt;
+
+SET @index_exists = (
+    SELECT COUNT(*)
+    FROM INFORMATION_SCHEMA.STATISTICS
+    WHERE TABLE_SCHEMA = DATABASE()
+      AND TABLE_NAME = 'doubts'
+      AND INDEX_NAME = 'idx_doubts_mentor'
+);
+SET @create_index_sql = IF(
+    @index_exists = 0,
+    'CREATE INDEX idx_doubts_mentor ON doubts(mentor_id)',
+    'DO 0'
+);
+PREPARE create_index_stmt FROM @create_index_sql;
+EXECUTE create_index_stmt;
+DEALLOCATE PREPARE create_index_stmt;
+
+SET @index_exists = (
+    SELECT COUNT(*)
+    FROM INFORMATION_SCHEMA.STATISTICS
+    WHERE TABLE_SCHEMA = DATABASE()
+      AND TABLE_NAME = 'doubts'
+      AND INDEX_NAME = 'idx_doubts_category'
+);
+SET @create_index_sql = IF(
+    @index_exists = 0,
+    'CREATE INDEX idx_doubts_category ON doubts(category)',
+    'DO 0'
+);
+PREPARE create_index_stmt FROM @create_index_sql;
+EXECUTE create_index_stmt;
+DEALLOCATE PREPARE create_index_stmt;
+
+SET @index_exists = (
+    SELECT COUNT(*)
+    FROM INFORMATION_SCHEMA.STATISTICS
+    WHERE TABLE_SCHEMA = DATABASE()
+      AND TABLE_NAME = 'doubts'
+      AND INDEX_NAME = 'idx_doubts_status'
+);
+SET @create_index_sql = IF(
+    @index_exists = 0,
+    'CREATE INDEX idx_doubts_status ON doubts(status)',
+    'DO 0'
+);
+PREPARE create_index_stmt FROM @create_index_sql;
+EXECUTE create_index_stmt;
+DEALLOCATE PREPARE create_index_stmt;

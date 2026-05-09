@@ -225,6 +225,14 @@ JWT_SECRET=Render can generate this from render.yaml
 CORS_ALLOWED_ORIGINS=https://*.vercel.app,http://localhost:5173,http://127.0.0.1:5173
 ```
 
+The `YOUR_AIVEN_HOST` value must be copied from the live Aiven service overview. Do not reuse an old host after deleting or recreating the Aiven service. If Render logs show:
+
+```text
+UnknownHostException: mysql-...aivencloud.com
+```
+
+the hostname in `DB_URL` is invalid or no longer exists. Update `DB_URL` in Render with the current Aiven host and port, then redeploy.
+
 For a custom Vercel domain or a specific production URL, include it too:
 
 ```text
@@ -246,7 +254,19 @@ https://your-render-backend.onrender.com/api/health
 Expected healthy response:
 
 ```json
-{"status":"UP","database":"UP","jwt":"UP"}
+{"status":"UP","databaseConfig":"SET","jwt":"UP","profile":"prod"}
+```
+
+The deeper readiness check verifies MySQL:
+
+```text
+https://your-render-backend.onrender.com/api/ready
+```
+
+Expected ready response:
+
+```json
+{"status":"UP","database":"UP","databaseConfig":"SET","jwt":"UP","profile":"prod"}
 ```
 
 ### Frontend on Vercel

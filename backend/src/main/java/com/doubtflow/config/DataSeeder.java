@@ -4,12 +4,15 @@ import com.doubtflow.model.Admin;
 import com.doubtflow.model.Mentor;
 import com.doubtflow.repository.AdminRepository;
 import com.doubtflow.repository.MentorRepository;
-import org.springframework.boot.CommandLineRunner;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
 @Component
-public class DataSeeder implements CommandLineRunner {
+public class DataSeeder {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(DataSeeder.class);
 
     private final AdminRepository adminRepository;
     private final MentorRepository mentorRepository;
@@ -21,12 +24,15 @@ public class DataSeeder implements CommandLineRunner {
         this.passwordEncoder = passwordEncoder;
     }
 
-    @Override
-    public void run(String... args) {
-        createAdminIfMissing("Faculty Admin", "admin@doubtflow.ai");
-        createMentorIfMissing("Aarav Mentor", "mentor.concepts@doubtflow.ai", "Conceptual Java");
-        createMentorIfMissing("Meera Mentor", "mentor.coding@doubtflow.ai", "Coding Practice");
-        createMentorIfMissing("Rahul Mentor", "mentor.debugging@doubtflow.ai", "Debugging Errors");
+    public void seedStarterAccounts() {
+        try {
+            createAdminIfMissing("Faculty Admin", "admin@doubtflow.ai");
+            createMentorIfMissing("Aarav Mentor", "mentor.concepts@doubtflow.ai", "Conceptual Java");
+            createMentorIfMissing("Meera Mentor", "mentor.coding@doubtflow.ai", "Coding Practice");
+            createMentorIfMissing("Rahul Mentor", "mentor.debugging@doubtflow.ai", "Debugging Errors");
+        } catch (Exception exception) {
+            LOGGER.warn("Starter account seeding could not complete. Check database connectivity and schema.", exception);
+        }
     }
 
     private void createAdminIfMissing(String name, String email) {
